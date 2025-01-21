@@ -4,4 +4,6 @@ export interface BuildingDTO {
   code: string;
   yearOfConstruction?: number;
   campusId: number;
+  latitude?: number;
+  longitude?: number;
 }

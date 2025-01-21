@@ -7,6 +7,7 @@ import { Role } from "@/types/userDTO";
 import { useRouter } from "next/navigation";
 import { CustomButton } from "@/components/CustomButton";
 import httpClient from "@/utils/httpClient";
+import { BuildingDistance } from "@/components/BuildingDistance";
 
 const BuildingsPage = () => {
   const { currentUser } = useAuth();
@@ -53,6 +54,7 @@ const BuildingsPage = () => {
           Create New Building
         </p>
       </Link>
+      <BuildingDistance />
       <ul>
         {buildings.map((building) => (
           <li
