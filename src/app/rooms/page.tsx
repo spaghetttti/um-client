@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Role } from "@/types/userDTO";
 import httpClient from "@/utils/httpClient";
+import RoomReservationForm from "@/components/RoomReservation";
 
 const RoomsPage = () => {
   const [rooms, setRooms] = useState<RoomDTO[]>([]);
@@ -54,6 +55,7 @@ const RoomsPage = () => {
           Create New Room
         </p>
       </Link>
+      <RoomReservationForm />
       <ul>
         {rooms.map((room) => (
           <li

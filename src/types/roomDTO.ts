@@ -3,7 +3,6 @@ export interface RoomDTO {
   roomNumber: string;
   capacity: number;
   type: string;
-  accessible: boolean;
   floor: number;
   buildingId: number;
 }

@@ -30,8 +30,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <nav className="bg-blue-500 text-white p-4 flex justify-between items-center">
-          <div className="flex gap-4">
+        <nav className="bg-blue-500 text-white p-4 flex flex-wrap justify-between items-center">
+          <div className="flex gap-1 m:gap-4">
             <Link
               href="/buildings"
               className="hover:bg-blue-600 px-4 py-2 rounded-md"
