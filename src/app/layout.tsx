@@ -50,6 +50,12 @@ export default function RootLayout({
             >
               Rooms
             </Link>
+            <Link
+              href="/components"
+              className="hover:bg-blue-600 px-4 py-2 rounded-md"
+            >
+              Components
+            </Link>
           </div>
           <div className="flex gap-4">
             <Link href="/" className="hover:bg-blue-600 px-4 py-2 rounded-md">

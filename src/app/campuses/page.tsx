@@ -3,9 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CampusDTO } from "@/types/campusDTO";
+import { CustomButton } from "@/components/CustomButton";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { Role } from "@/types/userDTO";
 
 const CampusesPage = () => {
   const [campuses, setCampuses] = useState<CampusDTO[]>([]);
+  const { currentUser } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchCampuses = async () => {
@@ -49,21 +55,27 @@ const CampusesPage = () => {
         {campuses.map((campus) => (
           <li
             key={campus.id}
-            className="flex justify-between items-center mb-4"
+            className="flex justify-between items-center mb-4 px-4 py-2 rounded bg-slate-800"
           >
             <span>{campus.name}</span>
             <div>
-              <Link href={`/campuses/${campus.id}`}>
-                <p className="px-2 py-1 bg-yellow-500 text-white rounded mr-2">
-                  Edit
-                </p>
-              </Link>
-              <button
-                className="px-2 py-1 bg-red-500 text-white rounded"
+              <CustomButton
+                disabled={
+                  !currentUser || currentUser.role !== Role.ADMINISTRATOR
+                }
+                onClick={() => router.push(`/campuses/${campus.id}`)}
+              >
+                Edit
+              </CustomButton>
+              <CustomButton
+                bgColor="bg-red-500"
+                disabled={
+                  !currentUser || currentUser.role !== Role.ADMINISTRATOR
+                }
                 onClick={() => handleDelete(campus.id)}
               >
                 Delete
-              </button>
+              </CustomButton>
             </div>
           </li>
         ))}

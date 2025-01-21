@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { BuildingDTO } from "@/types/buildingDTO";
 import BuildingForm from "@/components/BuildingForm";
+import AuthGuard from "@/app/auth/AuthGuard";
 
 const EditBuildingPage = () => {
   const { id } = useParams();
@@ -23,10 +24,12 @@ const EditBuildingPage = () => {
   }, [id]);
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Edit Building</h1>
-      {building && <BuildingForm building={building} />}
-    </div>
+    <AuthGuard allowedRoles={["ADMINISTRATOR", "MANAGER"]}>
+      <div className="container mx-auto p-4">
+        <h1 className="text-3xl font-bold mb-4">Edit Building</h1>
+        {building && <BuildingForm building={building} />}
+      </div>
+    </AuthGuard>
   );
 };
 

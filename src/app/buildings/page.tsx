@@ -2,14 +2,19 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BuildingDTO } from "@/types/buildingDTO";
+import { useAuth } from "@/context/AuthContext";
+import { Role } from "@/types/userDTO";
+import { useRouter } from "next/navigation";
+import { CustomButton } from "@/components/CustomButton";
 
 const BuildingsPage = () => {
+  const { currentUser } = useAuth();
+  const router = useRouter();
   const [buildings, setBuildings] = useState<BuildingDTO[]>([]);
 
   useEffect(() => {
     const fetchBuildings = async () => {
       let data;
-      console.log(process.env.NEXT_PUBLIC_BACKEND_URL)
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/buildings`
@@ -50,21 +55,27 @@ const BuildingsPage = () => {
         {buildings.map((building) => (
           <li
             key={building.id}
-            className="flex justify-between items-center mb-4"
+            className="flex justify-between items-center mb-4 px-4 py-2 rounded bg-slate-800"
           >
             <span>{building.code}</span>
-            <div>
-              <Link href={`/buildings/${building.id}`}>
-                <p className="px-2 py-1 bg-yellow-500 text-white rounded mr-2">
-                  Edit
-                </p>
-              </Link>
-              <button
-                className="px-2 py-1 bg-red-500 text-white rounded"
+            <div className="flex">
+              <CustomButton
+                disabled={
+                  !currentUser || currentUser.role !== Role.ADMINISTRATOR
+                }
+                onClick={() => router.push(`/buildings/${building.id}`)}
+              >
+                Edit
+              </CustomButton>
+              <CustomButton
+                bgColor=" bg-red-500"
+                disabled={
+                  !currentUser || currentUser.role !== Role.ADMINISTRATOR
+                }
                 onClick={() => handleDelete(building.id)}
               >
                 Delete
-              </button>
+              </CustomButton>
             </div>
           </li>
         ))}

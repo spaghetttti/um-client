@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { ComponentDTO } from "@/types/componentDTO";
 import ComponentForm from "@/components/ComponentForm";
+import AuthGuard from "@/app/auth/AuthGuard";
 
 const EditComponentPage = () => {
   const { id } = useParams();
@@ -12,7 +13,9 @@ const EditComponentPage = () => {
   useEffect(() => {
     if (id) {
       const fetchComponent = async () => {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/components/${id}`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/components/${id}`
+        );
         const data = await res.json();
         setComponent(data);
       };
@@ -21,10 +24,12 @@ const EditComponentPage = () => {
   }, [id]);
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Edit Component</h1>
-      {component && <ComponentForm component={component} />}
-    </div>
+    <AuthGuard allowedRoles={["ADMINISTRATOR", "MANAGER"]}>
+      <div className="container mx-auto p-4">
+        <h1 className="text-3xl font-bold mb-4">Edit Component</h1>
+        {component && <ComponentForm component={component} />}
+      </div>
+    </AuthGuard>
   );
 };
 

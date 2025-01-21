@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { RoomDTO } from "@/types/roomDTO";
 import RoomForm from "@/components/RoomForm";
+import AuthGuard from "@/app/auth/AuthGuard";
 
 const EditRoomPage = () => {
   const { id } = useParams();
@@ -12,7 +13,9 @@ const EditRoomPage = () => {
   useEffect(() => {
     if (id) {
       const fetchRoom = async () => {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/${id}`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/${id}`
+        );
         const data = await res.json();
         setRoom(data);
       };
@@ -21,10 +24,12 @@ const EditRoomPage = () => {
   }, [id]);
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Edit Room</h1>
-      {room && <RoomForm room={room} />}
-    </div>
+    <AuthGuard allowedRoles={["ADMINISTRATOR", "MANAGER"]}>
+      <div className="container mx-auto p-4">
+        <h1 className="text-3xl font-bold mb-4">Edit Room</h1>
+        {room && <RoomForm room={room} />}
+      </div>
+    </AuthGuard>
   );
 };
 

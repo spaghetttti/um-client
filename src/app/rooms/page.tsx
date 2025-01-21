@@ -3,17 +3,21 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { RoomDTO } from "@/types/roomDTO";
+import { CustomButton } from "@/components/CustomButton";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { Role } from "@/types/userDTO";
 
 const RoomsPage = () => {
   const [rooms, setRooms] = useState<RoomDTO[]>([]);
+  const { currentUser } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchRooms = async () => {
       let data;
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms`
-        );
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms`);
         data = await res.json();
       } catch (error) {
         console.log(error);
@@ -49,21 +53,27 @@ const RoomsPage = () => {
         {rooms.map((room) => (
           <li
             key={room.id}
-            className="flex justify-between items-center mb-4"
+            className="flex justify-between items-center mb-4 px-4 py-2 rounded bg-slate-800"
           >
             <span>{room.roomNumber}</span>
             <div>
-              <Link href={`/rooms/${room.id}`}>
-                <p className="px-2 py-1 bg-yellow-500 text-white rounded mr-2">
-                  Edit
-                </p>
-              </Link>
-              <button
-                className="px-2 py-1 bg-red-500 text-white rounded"
+              <CustomButton
+                disabled={
+                  !currentUser || currentUser.role !== Role.ADMINISTRATOR
+                }
+                onClick={() => router.push(`/rooms/${room.id}`)}
+              >
+                Edit
+              </CustomButton>
+              <CustomButton
+                bgColor="bg-red-500"
+                disabled={
+                  !currentUser || currentUser.role !== Role.ADMINISTRATOR
+                }
                 onClick={() => handleDelete(room.id)}
               >
                 Delete
-              </button>
+              </CustomButton>
             </div>
           </li>
         ))}
