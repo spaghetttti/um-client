@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BuildingDTO } from "@/types/buildingDTO";
+import httpClient from "@/utils/httpClient";
+import { useAuth } from "@/context/AuthContext";
 
 interface BuildingFormProps {
   building?: BuildingDTO;
@@ -10,48 +12,55 @@ interface BuildingFormProps {
 
 const BuildingForm: React.FC<BuildingFormProps> = ({ building }) => {
   const router = useRouter();
+  const { currentUser } = useAuth();
   const [code, setCode] = useState(building?.code || "");
   const [yearOfConstruction, setYearOfConstruction] = useState(
     building?.yearOfConstruction || ""
   );
-  const [campusId, setCampusId] = useState<number | "">(building?.campusId || "");
-  const [availableCampuses, setAvailableCampuses] = useState<{ id: number; name: string }[]>([]);
+  const [campusId, setCampusId] = useState<number | "">(
+    building?.campusId || ""
+  );
+  const [availableCampuses, setAvailableCampuses] = useState<
+    { id: number; name: string }[]
+  >([]);
 
   useEffect(() => {
     const fetchCampuses = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/campuses`);
-        const data = await res.json();
+        const data = await httpClient(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/campuses`,
+          "GET",
+          null,
+          currentUser // Pass currentUser
+        );
         setAvailableCampuses(data);
       } catch (error) {
-        console.error("Failed to fetch campuses", error);
+        console.log("Error fetching campuses:", (error as Record<string, string>).message);
       }
     };
-
+  
     fetchCampuses();
-  }, []);
+  }, [currentUser]); 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const buildingData = { code, yearOfConstruction, campusId };
+    const url = building
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/buildings/${building.id}`
+      : `${process.env.NEXT_PUBLIC_BACKEND_URL}/buildings`;
+    const method = building ? "PUT" : "POST";
 
-    const res = building
-      ? await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/buildings/${building.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(buildingData),
-        })
-      : await fetch("/api/buildings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(buildingData),
-        });
-
-    if (res.ok) {
+    try {
+      await httpClient(
+        url,
+        method,
+        buildingData,
+        currentUser // Pass currentUser
+      );
       router.push("/buildings");
-    } else {
-      alert("Error saving building");
+    } catch (error) {
+      alert(`Error saving building: ${error}`);
     }
   };
 

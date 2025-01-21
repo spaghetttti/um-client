@@ -3,5 +3,6 @@ export interface ComponentDTO {
   acronym: string;
   name: string;
   responsiblePerson: string;
-  exploitedBuildings: number[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  exploitedBuildings: any[];
 }

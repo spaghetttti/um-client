@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Role } from "@/types/userDTO";
 import { useRouter } from "next/navigation";
 import { CustomButton } from "@/components/CustomButton";
+import httpClient from "@/utils/httpClient";
 
 const BuildingsPage = () => {
   const { currentUser } = useAuth();
@@ -14,32 +15,33 @@ const BuildingsPage = () => {
 
   useEffect(() => {
     const fetchBuildings = async () => {
-      let data;
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/buildings`
+        const data = await httpClient(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/buildings`,
+          "GET",
+          null,
+          currentUser // Pass currentUser
         );
-        data = await res.json();
+        setBuildings(data);
       } catch (error) {
-        console.log(error);
+        console.log("Error fetching buildings:", (error as Record<string, string>).message);
       }
-      if (!!data) setBuildings(data);
     };
 
     fetchBuildings();
-  }, []);
+  }, [currentUser]); // Dependency on currentUser
 
   const handleDelete = async (id: number) => {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/buildings/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
-
-    if (res.ok) {
-      // Remove from the list without fetching again
+    try {
+      await httpClient(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/buildings/${id}`,
+        "DELETE",
+        null, // No body for DELETE
+        currentUser // Pass currentUser as a parameter
+      );
       setBuildings(buildings.filter((building) => building.id !== id));
+    } catch (error) {
+      console.error("Error deleting building:", (error as Record<string, string>).message);
     }
   };
 

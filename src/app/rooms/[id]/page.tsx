@@ -5,23 +5,33 @@ import { useParams } from "next/navigation";
 import { RoomDTO } from "@/types/roomDTO";
 import RoomForm from "@/components/RoomForm";
 import AuthGuard from "@/app/auth/AuthGuard";
+import httpClient from "@/utils/httpClient";
+import { useAuth } from "@/context/AuthContext";
 
 const EditRoomPage = () => {
   const { id } = useParams();
+  const { currentUser } = useAuth();
   const [room, setRoom] = useState<RoomDTO | null>(null);
 
   useEffect(() => {
     if (id) {
       const fetchRoom = async () => {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/${id}`
-        );
-        const data = await res.json();
-        setRoom(data);
+        try {
+          const data = await httpClient(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/${id}`,
+            "GET",
+            null,
+            currentUser // Pass currentUser
+          );
+          setRoom(data);
+        } catch (error) {
+          console.log("Error fetching room:", (error as Record<string, string>).message);
+        }
       };
+  
       fetchRoom();
     }
-  }, [id]);
+  }, []); 
 
   return (
     <AuthGuard allowedRoles={["ADMINISTRATOR", "MANAGER"]}>

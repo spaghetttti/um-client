@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { RoomDTO } from "@/types/roomDTO";
+import httpClient from "@/utils/httpClient";
+import { useAuth } from "@/context/AuthContext";
 
 interface RoomFormProps {
   room?: RoomDTO;
@@ -10,22 +12,31 @@ interface RoomFormProps {
 
 const RoomForm: React.FC<RoomFormProps> = ({ room }) => {
   const router = useRouter();
+  const { currentUser } = useAuth();
   const [roomNumber, setRoomNumber] = useState(room?.roomNumber || "");
   const [capacity, setCapacity] = useState(room?.capacity || "");
   const [type, setType] = useState(room?.type || "");
   const [accessible, setAccessible] = useState(room?.accessible || false);
   const [floor, setFloor] = useState(room?.floor || "");
-  const [buildingId, setBuildingId] = useState<number | "">(room?.buildingId || "");
-  const [availableBuildings, setAvailableBuildings] = useState<{ id: number; code: string }[]>([]);
+  const [buildingId, setBuildingId] = useState<number | "">(
+    room?.buildingId || ""
+  );
+  const [availableBuildings, setAvailableBuildings] = useState<
+    { id: number; code: string }[]
+  >([]);
 
   useEffect(() => {
     const fetchBuildings = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/buildings`);
-        const data = await res.json();
+        const data = await httpClient(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/buildings`,
+          "GET",
+          null,
+          currentUser // Pass currentUser
+        );
         setAvailableBuildings(data);
       } catch (error) {
-        console.error("Failed to fetch buildings", error);
+        console.log("Error fetching buildings:", error);
       }
     };
 
@@ -44,22 +55,16 @@ const RoomForm: React.FC<RoomFormProps> = ({ room }) => {
       buildingId,
     };
 
-    const res = room
-      ? await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/${room.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(roomData),
-        })
-      : await fetch("/api/rooms", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(roomData),
-        });
+    const url = room
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/${room.id}`
+      : `${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms`;
+    const method = room ? "PUT" : "POST";
 
-    if (res.ok) {
+    try {
+      await httpClient(url, method, roomData, currentUser); // Pass currentUser
       router.push("/rooms");
-    } else {
-      alert("Error saving room");
+    } catch (error) {
+      alert(`Error saving room: ${(error as Record<string, string>).message}`);
     }
   };
 

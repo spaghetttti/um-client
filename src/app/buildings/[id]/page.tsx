@@ -5,23 +5,33 @@ import { useParams } from "next/navigation";
 import { BuildingDTO } from "@/types/buildingDTO";
 import BuildingForm from "@/components/BuildingForm";
 import AuthGuard from "@/app/auth/AuthGuard";
+import { useAuth } from "@/context/AuthContext";
+import httpClient from "@/utils/httpClient";
 
 const EditBuildingPage = () => {
   const { id } = useParams();
+  const { currentUser } = useAuth();
   const [building, setBuilding] = useState<BuildingDTO | null>(null);
 
   useEffect(() => {
     if (id) {
       const fetchBuilding = async () => {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/buildings/${id}`
-        );
-        const data = await res.json();
-        setBuilding(data);
+        try {
+          const data = await httpClient(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/buildings/${id}`,
+            "GET",
+            null,
+            currentUser // Pass currentUser
+          );
+          setBuilding(data);
+        } catch (error) {
+          console.log("Error fetching building:", (error as Record<string, string>).message);
+        }
       };
+  
       fetchBuilding();
     }
-  }, [id]);
+  }, [id, currentUser]);
 
   return (
     <AuthGuard allowedRoles={["ADMINISTRATOR", "MANAGER"]}>

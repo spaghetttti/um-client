@@ -7,6 +7,7 @@ import { CustomButton } from "@/components/CustomButton";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Role } from "@/types/userDTO";
+import httpClient from "@/utils/httpClient";
 
 const CampusesPage = () => {
   const [campuses, setCampuses] = useState<CampusDTO[]>([]);
@@ -15,31 +16,33 @@ const CampusesPage = () => {
 
   useEffect(() => {
     const fetchCampuses = async () => {
-      let data;
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/campuses`
+        const data = await httpClient(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/campuses`,
+          "GET",
+          null,
+          currentUser // Pass currentUser
         );
-        data = await res.json();
+        setCampuses(data);
       } catch (error) {
-        console.log(error);
+        console.log("Error fetching campuses:", (error as Record<string, string>).message);
       }
-      if (!!data) setCampuses(data);
     };
-
+  
     fetchCampuses();
-  }, []);
-
+  }, [currentUser]); 
+  
   const handleDelete = async (id: number) => {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/campuses/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
-
-    if (res.ok) {
+    try {
+      await httpClient(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/campuses/${id}`,
+        "DELETE",
+        null,
+        currentUser // Pass currentUser
+      );
       setCampuses(campuses.filter((campus) => campus.id !== id));
+    } catch (error) {
+      console.log("Error deleting campus:", (error as Record<string, string>).message);
     }
   };
 

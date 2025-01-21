@@ -7,6 +7,7 @@ import { CustomButton } from "@/components/CustomButton";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { Role } from "@/types/userDTO";
+import httpClient from "@/utils/httpClient";
 
 const RoomsPage = () => {
   const [rooms, setRooms] = useState<RoomDTO[]>([]);
@@ -15,29 +16,33 @@ const RoomsPage = () => {
 
   useEffect(() => {
     const fetchRooms = async () => {
-      let data;
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms`);
-        data = await res.json();
+        const data = await httpClient(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms`,
+          "GET",
+          null,
+          currentUser // Pass currentUser
+        );
+        setRooms(data);
       } catch (error) {
-        console.log(error);
+        console.log("Error fetching rooms:", (error as Record<string, string>).message);
       }
-      if (!!data) setRooms(data);
     };
 
     fetchRooms();
-  }, []);
+  }, [currentUser]);
 
   const handleDelete = async (id: number) => {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
-
-    if (res.ok) {
+    try {
+      await httpClient(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/rooms/${id}`,
+        "DELETE",
+        null,
+        currentUser // Pass currentUser
+      );
       setRooms(rooms.filter((room) => room.id !== id));
+    } catch (error) {
+      console.log("Error deleting room:", (error as Record<string, string>).message);
     }
   };
 

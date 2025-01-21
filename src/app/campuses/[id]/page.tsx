@@ -5,23 +5,33 @@ import { useParams } from "next/navigation";
 import { CampusDTO } from "@/types/campusDTO";
 import CampusForm from "@/components/CampusForm";
 import AuthGuard from "@/app/auth/AuthGuard";
+import { useAuth } from "@/context/AuthContext";
+import httpClient from "@/utils/httpClient";
 
 const EditCampusPage = () => {
   const { id } = useParams();
   const [campus, setCampus] = useState<CampusDTO | null>(null);
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     if (id) {
       const fetchCampus = async () => {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/campuses/${id}`
-        );
-        const data = await res.json();
-        setCampus(data);
+        try {
+          const data = await httpClient(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/campuses/${id}`,
+            "GET",
+            null,
+            currentUser // Pass currentUser
+          );
+          setCampus(data);
+        } catch (error) {
+          console.log("Error fetching campus:", (error as Record<string, string>).message);
+        }
       };
+  
       fetchCampus();
     }
-  }, [id]);
+  }, [id, currentUser]);
 
   return (
     <AuthGuard allowedRoles={["ADMINISTRATOR", "MANAGER"]}>

@@ -5,23 +5,33 @@ import { useParams } from "next/navigation";
 import { ComponentDTO } from "@/types/componentDTO";
 import ComponentForm from "@/components/ComponentForm";
 import AuthGuard from "@/app/auth/AuthGuard";
+import { useAuth } from "@/context/AuthContext";
+import httpClient from "@/utils/httpClient";
 
 const EditComponentPage = () => {
   const { id } = useParams();
   const [component, setComponent] = useState<ComponentDTO | null>(null);
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     if (id) {
       const fetchComponent = async () => {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/components/${id}`
-        );
-        const data = await res.json();
-        setComponent(data);
+        try {
+          const data = await httpClient(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/components/${id}`,
+            "GET",
+            null,
+            currentUser // Pass currentUser
+          );
+          setComponent(data);
+        } catch (error) {
+          console.log("Error fetching component:", (error as Record<string, string>).message);
+        }
       };
+  
       fetchComponent();
     }
-  }, [id]);
+  }, []);
 
   return (
     <AuthGuard allowedRoles={["ADMINISTRATOR", "MANAGER"]}>

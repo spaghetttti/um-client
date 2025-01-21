@@ -7,6 +7,7 @@ import { CustomButton } from "@/components/CustomButton";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Role } from "@/types/userDTO";
+import httpClient from "@/utils/httpClient";
 
 const ComponentsPage = () => {
   const [components, setComponents] = useState<ComponentDTO[]>([]);
@@ -15,31 +16,33 @@ const ComponentsPage = () => {
   
   useEffect(() => {
     const fetchComponents = async () => {
-      let data;
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/components`
+        const data = await httpClient(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/components`,
+          "GET",
+          null,
+          currentUser // Pass currentUser
         );
-        data = await res.json();
+        setComponents(data);
       } catch (error) {
-        console.log(error);
+        console.log("Error fetching components:", (error as Record<string, string>).message);
       }
-      if (!!data) setComponents(data);
     };
-
+  
     fetchComponents();
-  }, []);
+  }, [currentUser]);
 
   const handleDelete = async (id: number) => {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/components/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
-
-    if (res.ok) {
+    try {
+      await httpClient(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/components/${id}`,
+        "DELETE",
+        null,
+        currentUser // Pass currentUser
+      );
       setComponents(components.filter((component) => component.id !== id));
+    } catch (error) {
+      console.log("Error deleting component:", (error as Record<string, string>).message);
     }
   };
 

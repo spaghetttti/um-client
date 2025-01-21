@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ComponentDTO } from "@/types/componentDTO";
+import httpClient from "@/utils/httpClient";
+import { useAuth } from "@/context/AuthContext";
 
 interface ComponentFormProps {
   component?: ComponentDTO;
@@ -10,20 +12,31 @@ interface ComponentFormProps {
 
 const ComponentForm: React.FC<ComponentFormProps> = ({ component }) => {
   const router = useRouter();
+  const { currentUser } = useAuth();
   const [acronym, setAcronym] = useState(component?.acronym || "");
   const [name, setName] = useState(component?.name || "");
-  const [responsiblePerson, setResponsiblePerson] = useState(component?.responsiblePerson || "");
-  const [exploitedBuildings, setExploitedBuildings] = useState<unknown[]>(component?.exploitedBuildings || []);
-  const [availableBuildings, setAvailableBuildings] = useState<{ id: number; code: string }[]>([]);
+  const [responsiblePerson, setResponsiblePerson] = useState(
+    component?.responsiblePerson || ""
+  );
+  const [exploitedBuildings, setExploitedBuildings] = useState<
+    { id: number; code: string }[]
+  >(component?.exploitedBuildings || []);
+  const [availableBuildings, setAvailableBuildings] = useState<
+    { id: number; code: string }[]
+  >([]);
 
   useEffect(() => {
     const fetchBuildings = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/buildings`);
-        const data = await res.json();
+        const data = await httpClient(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/buildings`,
+          "GET",
+          null,
+          currentUser // Pass currentUser
+        );
         setAvailableBuildings(data);
       } catch (error) {
-        console.error("Failed to fetch buildings", error);
+        console.log("Error fetching buildings:", error);
       }
     };
 
@@ -32,38 +45,46 @@ const ComponentForm: React.FC<ComponentFormProps> = ({ component }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    console.log(exploitedBuildings.map((building) => building.id))
     const componentData = {
       acronym,
       name,
       responsiblePerson,
-      exploitedBuildings,
+      exploitedBuildings: exploitedBuildings.map((building) => building.id),
     };
 
-    const res = component
-      ? await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/components/${component.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(componentData),
-        })
-      : await fetch("/api/components", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(componentData),
-        });
+    const url = component
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/components/${component.id}`
+      : `${process.env.NEXT_PUBLIC_BACKEND_URL}/components`;
+    const method = component ? "PUT" : "POST";
 
-    if (res.ok) {
+    try {
+      await httpClient(url, method, componentData, currentUser); // Pass currentUser
       router.push("/components");
-    } else {
-      alert("Error saving component");
+    } catch (error) {
+      alert(
+        `Error saving component: ${(error as Record<string, string>).message}`
+      );
     }
   };
 
   const toggleBuildingSelection = (id: number) => {
-    if (exploitedBuildings.includes(id)) {
-      setExploitedBuildings(exploitedBuildings.filter((buildingId) => buildingId !== id));
+    const buildingExists = exploitedBuildings.some(
+      (building) => building.id === id
+    );
+
+    if (buildingExists) {
+      setExploitedBuildings(
+        exploitedBuildings.filter((building) => building.id !== id)
+      );
     } else {
-      setExploitedBuildings([...exploitedBuildings, id]);
+      const selectedBuilding = availableBuildings.find(
+        (building) => building.id === id
+      );
+      console.log(selectedBuilding);
+      if (selectedBuilding) {
+        setExploitedBuildings([...exploitedBuildings, selectedBuilding]);
+      }
     }
   };
 
@@ -105,8 +126,7 @@ const ComponentForm: React.FC<ComponentFormProps> = ({ component }) => {
               <input
                 type="checkbox"
                 id={`building-${building.id}`}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                checked={Boolean(exploitedBuildings.find((v): boolean => (v as any).id === building.id))}
+                checked={exploitedBuildings.some((v) => v.id === building.id)}
                 onChange={() => toggleBuildingSelection(building.id)}
                 className="mr-2"
               />

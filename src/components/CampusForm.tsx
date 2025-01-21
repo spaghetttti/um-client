@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CampusDTO } from "@/types/campusDTO";
+import { useAuth } from "@/context/AuthContext";
+import httpClient from "@/utils/httpClient";
 
 interface CampusFormProps {
   campus?: CampusDTO;
@@ -10,30 +12,24 @@ interface CampusFormProps {
 
 const CampusForm: React.FC<CampusFormProps> = ({ campus }) => {
   const router = useRouter();
+  const { currentUser } = useAuth();
   const [name, setName] = useState(campus?.name || "");
   const [city, setCity] = useState(campus?.city || "");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const campusData = { name, city };
+    const campusData = { name, city }; // Replace with actual form data
+    const url = campus
+      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/campuses/${campus.id}`
+      : `${process.env.NEXT_PUBLIC_BACKEND_URL}/campuses`;
+    const method = campus ? "PUT" : "POST";
 
-    const res = campus
-      ? await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/campuses/${campus.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(campusData),
-        })
-      : await fetch("/api/campuses", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(campusData),
-        });
-
-    if (res.ok) {
+    try {
+      await httpClient(url, method, campusData, currentUser); // Pass currentUser
       router.push("/campuses");
-    } else {
-      alert("Error saving campus");
+    } catch (error) {
+      alert(`Error saving campus: ${(error as Record<string, string>).message}`);
     }
   };
 

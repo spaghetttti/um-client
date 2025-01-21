@@ -1,22 +1,17 @@
 "use client";
 
+import { UserDTO } from "@/types/userDTO";
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 
-interface User {
-  id: number;
-  email: string;
-  role: string;
-}
-
 interface AuthContextType {
-  currentUser: User | null;
-  setCurrentUser: (user: User | null) => void;
+  currentUser: UserDTO | null;
+  setCurrentUser: (user: UserDTO | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserDTO | null>(null);
 
   useEffect(() => {
     // Load user from localStorage on initial load
@@ -26,7 +21,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const saveUser = (user: User | null) => {
+  const saveUser = (user: UserDTO | null) => {
     if (user) {
       localStorage.setItem("currentUser", JSON.stringify(user));
     } else {
