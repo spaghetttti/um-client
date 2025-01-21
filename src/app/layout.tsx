@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import Link from "next/link";
+import { AuthProvider } from "@/context/AuthContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -28,7 +30,34 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <nav className="bg-blue-500 text-white p-4 flex justify-between items-center">
+          <div className="flex gap-4">
+            <Link
+              href="/buildings"
+              className="hover:bg-blue-600 px-4 py-2 rounded-md"
+            >
+              Building
+            </Link>
+            <Link
+              href="/campuses"
+              className="hover:bg-blue-600 px-4 py-2 rounded-md"
+            >
+              Campuses
+            </Link>
+            <Link
+              href="/rooms"
+              className="hover:bg-blue-600 px-4 py-2 rounded-md"
+            >
+              Rooms
+            </Link>
+          </div>
+          <div className="flex gap-4">
+            <Link href="/" className="hover:bg-blue-600 px-4 py-2 rounded-md">
+              Main Page
+            </Link>
+          </div>
+        </nav>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
